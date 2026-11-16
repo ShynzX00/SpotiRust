@@ -1,0 +1,62 @@
+# Prevent Cargo from walking up to a parent Cargo.toml.
+# This must come before [package] in the file.
+[workspace]
+
+[package]
+name    = "spoti-rust"
+version = "0.1.0"
+edition = "2021"
+
+# ── Feature flags ─────────────────────────────────────────────────────────────
+# Default build  :  cargo build --release
+# Linux + MPRIS  :  cargo build --release --features mpris
+[features]
+default = []
+mpris   = ["souvlaki/use-zbus"]
+
+# ── Core dependencies ─────────────────────────────────────────────────────────
+[dependencies]
+
+# CEF bindings (tauri-apps/cef-rs — the real published crate)
+# Set CEF_PATH to your CEF binary distribution before building.
+cef = "156"
+
+# IPC serialization
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Fast Mutex / RwLock
+parking_lot = "0.12"
+
+# OS media-key / Now-Playing
+souvlaki = "0.7"
+
+# System tray
+tray-icon = "0.14"
+
+# PNG decode for the tray icon
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+# Async runtime — "time" is needed for tokio::time::sleep in the main loop
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time"] }
+
+# Logging
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Cross-platform data directories
+dirs = "5"
+
+# ── Platform-specific ─────────────────────────────────────────────────────────
+[target.'cfg(target_os = "linux")'.dependencies]
+# zbus for MPRIS is pulled in transitively when the `mpris` feature is active.
+
+[target.'cfg(target_os = "windows")'.dependencies]
+# windows-rs for SMTC is a transitive dep of souvlaki on Windows.
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# objc / cocoa for Now Playing is a transitive dep of souvlaki on macOS.
+
+# ── Build script ──────────────────────────────────────────────────────────────
+[build-dependencies]
+cc = "1"
